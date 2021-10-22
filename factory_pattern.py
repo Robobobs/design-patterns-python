@@ -1,13 +1,14 @@
 '''Example script showcasing the factory design pattern for a generic Product'''
 
 from abc import ABCMeta, abstractmethod
+import pyinputplus as pyip
 
 class IProduct(metaclass=ABCMeta):      # Abstract classes cannot be instantiated.
     '''Defines abstract Product class'''
 
     @staticmethod                       # Removes need for 'self' argument. Self not needed as method is not implemented.
     @abstractmethod                     # Ensures the inheriting class must override this method during instantiation.
-    def product_method():                 # Defined common interface method.
+    def product_method():               # Defined common interface method.
         '''Static interface method only'''
 
 
@@ -18,7 +19,7 @@ class ProductA(IProduct):
         self.description = f'{self.name} is a small product'
 
     def product_method(self):
-        print('Generic method call for Product A')
+        return 'Generic method call for Product A'
 
 class ProductB(IProduct):
     '''Class for Product B'''
@@ -27,7 +28,7 @@ class ProductB(IProduct):
         self.description = f'{self.name} is a medium product'
 
     def product_method(self):
-        print('Generic method call for Product B')
+        return 'Generic method call for Product B'
 
 class ProductC(IProduct):
     '''Class for Product C'''
@@ -36,7 +37,7 @@ class ProductC(IProduct):
         self.description = f'{self.name} is a large product'
 
     def product_method(self):
-        print('Generic method call for Product C')
+        return 'Generic method call for Product C'
 
 
 class ProductFactory:
@@ -56,13 +57,16 @@ class ProductFactory:
   
 
 if __name__ == "__main__":
-    user_input = input('Choose a product type (A, B or C): ')
+    
+    products = ['A', 'B', 'C']
+    user_input = pyip.inputChoice(products, prompt = 'Choose a product type (A, B or C): ')
     product1 = ProductFactory().new_product(user_input.upper())
     
     # ------------------------------ TEST CASE ----------------------------------- #
     try:
         print(f"\nName: {product1.name}")
         print(f"Description: {product1.description}")
-        product1.product_method()
+        print(product1.product_method())
+
     except AttributeError:
-        print('Product attribute(s) not found...')
+        print('Product attribute or method not found...')
