@@ -4,7 +4,6 @@ import time
 
 class CheckDrinkChoice:
     '''Checks if drink selection is available'''
-    
     def check_drink_choice(self, drink_choice, drinks):
         if drink_choice in drinks.keys():
             return True
@@ -14,25 +13,22 @@ class CheckDrinkChoice:
 
 class CheckStock:
     '''Checks if drink selection is in stock'''
-    
     def check_stock_level(self, drink_choice, drinks):     
         for drink, stock_num in drinks.items():
             if drink == drink_choice:
                 return stock_num
         return False            
 
-
-class Dispense:
-    '''Initiates physical vending (activates dispensing pump)'''
     
+class Dispense:
+    '''Initiates physical vending (activates dispensing pump)'''    
     def dispense(self):
         print('Dispensing drink...')
         time.sleep(3)
-
+        
 
 class VendingFacade:
-    '''Facade for vending machine sub processes'''
-    
+    '''Facade for vending machine sub processes'''    
     def __init__(self):
         self.choice = CheckDrinkChoice()
         self.stock = CheckStock()
@@ -50,9 +46,8 @@ class VendingFacade:
             return None
 
 
-
 if __name__ == '__main__':
-
+    
     #   Client specific drinks incl. stock values
     drinks = {
             'peppermint tea': 5,
