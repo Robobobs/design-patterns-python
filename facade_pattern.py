@@ -4,7 +4,7 @@ import time
 
 class ChoiceValidator:
     '''Checks if the users product selection is available'''
-    def check_drink_choice(self, product_choice, product_info_dict):
+    def check_product_choice(self, product_choice, product_info_dict):
         return True if product_choice in product_info_dict.keys() else False
             
 
@@ -18,9 +18,9 @@ class Stock:
 
     
 class Dispenser:
-    '''Initiates physical vending (activates dispensing pump)'''    
+    '''Initiates physical vending (activates dispensing process)'''    
     def dispense(self):
-        print('Dispensing drink...')
+        print('Dispensing product...')
         time.sleep(3)
         
 
@@ -62,13 +62,13 @@ class VendingFacade:
         print(f'{add_qty} added to {product_key}')
 
 
-    def dispense_drink(self, product_choice):
-        choice = self.choice.check_drink_choice(product_choice, product_info_dict)
+    def dispense_product(self, product_choice):
+        choice = self.choice.check_product_choice(product_choice, product_info_dict)
         stock = self.stock.check_stock_level(product_choice, product_info_dict)
 
         if choice == True and stock > 0:
             self.dispenser.dispense()
-            print('Dispensing complete. Enjoy your drink!')
+            print('Dispensing complete. Enjoy!')
             return True
         else:
             print(f'{product_choice.title()} is not available or out of stock...')
@@ -82,5 +82,5 @@ if __name__ == '__main__':
     
     product_choice = input('Please select your food or drink: ')
     vend = VendingFacade()
-    vend.dispense_drink(product_choice.lower())
+    vend.dispense_product(product_choice.lower())
 
