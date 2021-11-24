@@ -246,23 +246,42 @@ if __name__ == '__main__':
         else:
             vending_machine.dispense_product(product_choice.lower())
 
-    def repeat_vending_process():
-        user_input = pyip.inputYesNo(prompt="\nReturn to the vending machines (yes or no): ")  
+    def continue_program():
+        user_input = pyip.inputYesNo(prompt="\nReturn to the vending machines (yes/no): ")  
         return False if user_input == 'no' else True
 
+    def select_vending_machine():
+        machine_string = ''
+        
+        for i in range(len(VendingFacade.machine_ids)):
+            #if not VendingFacade.machine_ids[-1]:
+            
+            if i != len(VendingFacade.machine_ids) - 1:
+                machine_string += VendingFacade.machine_ids[i] + ', '
+
+            if i != len(VendingFacade.machine_ids) - 2:
+                machine_string += VendingFacade.machine_ids[i] + ' or '
+            
+            else:
+                machine_string += VendingFacade.machine_ids[i]
+        
+        machine_choice = pyip.inputChoice(VendingFacade.machine_ids, prompt=f"\nWhich vending machine do you wish to use? ({machine_string}): ")
+        return machine_choice
+
     def repeat_maintenance_process():
-        user_input = pyip.inputYesNo(prompt="\nStay in maintenance mode and perform another action (yes or no): ")  
+        user_input = pyip.inputYesNo(prompt="\nStay in maintenance mode and perform another action (yes/no): ")  
         return False if user_input == 'no' else True
 
 
     # ------------------------------ TEST CASE ----------------------------------- #
     
-    repeat_flag = True
+    program_run = True
     maintenance_mode = False
     
-    while repeat_flag == True:
-       
-        machine_choice = pyip.inputChoice(VendingFacade.machine_ids, prompt="\nWhich vending machine do you wish to use? (1 or 2): ")
+    while program_run == True:
+
+        machine_choice = select_vending_machine()
+        
         vending_machine = vending_machine_pointer(machine_choice)
         vending = vending_process(machine_choice)
 
@@ -311,5 +330,5 @@ if __name__ == '__main__':
                     maintenance_mode = False
                     print('\n-- Maintenance mode deactivated --')
 
-        if not repeat_vending_process():
-            repeat_flag = False
+        if not continue_program():
+            program_run = False
