@@ -164,39 +164,49 @@ class Engineer:
 
 class VendingFacade:
     '''Facade class for vending machine sub processes'''    
+   
+    machine_ids = []
+
     def __init__(self, default_products=dict()):
-        self.product_info_dict = dict() #   Dictionary of vendable products
+        self.id = None
+        self.product_info_dict = dict()
         self.stock = Stock(self.product_info_dict)
         self.dispenser = Dispenser()
         self.engineer = Engineer(self.product_info_dict)
+        
+        if not VendingFacade.machine_ids:
+            self.id = '1'
+            VendingFacade.machine_ids.append(self.id)
+        else:
+            new_id = VendingFacade.machine_ids[-1]
+            VendingFacade.machine_ids.append(str(int(new_id)+1))
 
         if default_products:
             for product_key, product_info in default_products.items():
-                self.engineer.add_product_info(product_info['name'], product_info['price'], product_info['stock_qty'])
-    
+                self.engineer.add_product_info(product_info['name'], product_info['price'], product_info['stock_qty'])     
+
     def dispense_product(self, product_choice):
         '''Checks current stock level before dispensing product'''
 
         if self.stock.check_stock_level(product_choice) > 0:
             self.dispenser.dispense(product_choice)
-            self.stock.remove_stock(product_choice)
+            self.stock.remove_stock(product_choice) # Is this correct still?
             print(f'Dispensing complete. Enjoy your {product_choice}!')
             return True
         else:
             print(f'\n{product_choice.title()} is out of stock!')
             return False
 
+    def engineer_mode(self):
+        '''Takes engineer requirements'''
+
+        pass
 
 if __name__ == '__main__':
 
     vending_machine_1 = VendingFacade(DEFAULT_PRODUCTS_1)
     vending_machine_2 = VendingFacade(DEFAULT_PRODUCTS_2)
-   
-    machine_ids = [
-                    '1',    # vending_machine_1
-                    '2',    # vending_machine_2
-                    ]
-
+    
     maintenance_prompts = [
                         'Perform system check --->',
                         'Add new product --->',     
@@ -207,6 +217,7 @@ if __name__ == '__main__':
                         ]
     
     def vending_machine_pointer(machine_id):
+        '''Takes the machine_id and returns a pointer to the correct machine object'''
         if machine_id == '1':
             pointer = vending_machine_1
         elif machine_id == '2':
@@ -216,6 +227,7 @@ if __name__ == '__main__':
         return pointer
 
     def get_product_list(machine_id):           
+        '''Retrieves the most recent product list associated with the machine_id'''
         vending_machine = vending_machine_pointer(machine_id)
         product_list = []
 
@@ -230,7 +242,7 @@ if __name__ == '__main__':
         product_choice = pyip.inputMenu(product_list, numbered=True, prompt="\nPlease select one of the following:\n")
         
         if product_choice == '(Enter maintenance mode)':
-            return True
+            return False
         else:
             vending_machine.dispense_product(product_choice.lower())
 
@@ -242,7 +254,7 @@ if __name__ == '__main__':
         user_input = pyip.inputYesNo(prompt="\nStay in maintenance mode and perform another action (yes or no): ")  
         return False if user_input == 'no' else True
 
-#prompt_2 = "\nEnter 'm' to access maintenance mode: "
+
     # ------------------------------ TEST CASE ----------------------------------- #
     
     repeat_flag = True
@@ -250,11 +262,15 @@ if __name__ == '__main__':
     
     while repeat_flag == True:
        
-        machine_choice = pyip.inputChoice(machine_ids, prompt="\nWhich vending machine do you wish to use? (1 or 2): ")
+        machine_choice = pyip.inputChoice(VendingFacade.machine_ids, prompt="\nWhich vending machine do you wish to use? (1 or 2): ")
         vending_machine = vending_machine_pointer(machine_choice)
-        engineer = vending_process(machine_choice)
+        vending = vending_process(machine_choice)
 
-        if engineer:
+        if not vending:
+            vending_machine.engineer_mode()
+
+
+        if not vending:
             maintenance_mode = True
             print('\n-- Maintenance mode activated --\n')
             
@@ -297,22 +313,3 @@ if __name__ == '__main__':
 
         if not repeat_vending_process():
             repeat_flag = False
-
-
-
-
-
-    #vending_machine_1.maintenance.system_check():
-    #print('Reboot required - system rebooting...')
-
-    #   Adding new product to vending machine and printing all product information
-    #vending_machine_1.add_product_info('snickers', 2.30, 9)
-    #print('\n--- Product Information ---')
-    #for product_name, product_info in vending_machine_1.product_info_dict.items():
-    #    print(product_info.__str__()) # Note: Last product now 'Snickers'
-    
-    #   Updating existing product stock and printing all product information
-    #vending_machine_1.add_stock('bulgarian kozunak', 5)
-    #print('\n--- Product Information ---')
-    #for product_name, product_info in vending_machine_1.product_info_dict.items():
-    #    print(product_info.__str__()) # Note: 'Stock QTY' increased from 0 to 5
