@@ -206,7 +206,7 @@ if __name__ == '__main__':
 
     vending_machine_1 = VendingFacade(DEFAULT_PRODUCTS_1)
     vending_machine_2 = VendingFacade(DEFAULT_PRODUCTS_2)
-    
+
     maintenance_prompts = [
                         'Perform system check --->',
                         'Add new product --->',     
@@ -236,7 +236,7 @@ if __name__ == '__main__':
         return product_list
 
     def vending_process(machine_id):
-        vending_machine = vending_machine_pointer(machine_id)
+        vending_machine_object= vending_machine_pointer(machine_id)
         product_list = get_product_list(machine_id)
         product_list.append('(Enter maintenance mode)')
         product_choice = pyip.inputMenu(product_list, numbered=True, prompt="\nPlease select one of the following:\n")
@@ -244,27 +244,21 @@ if __name__ == '__main__':
         if product_choice == '(Enter maintenance mode)':
             return False
         else:
-            vending_machine.dispense_product(product_choice.lower())
+            vending_machine_object.dispense_product(product_choice.lower())
 
-    def continue_program():
+    def terminate_program():
         user_input = pyip.inputYesNo(prompt="\nReturn to the vending machines (yes/no): ")  
-        return False if user_input == 'no' else True
+        return True if user_input == 'no' else False
 
     def select_vending_machine():
         machine_string = ''
-        
         for i in range(len(VendingFacade.machine_ids)):
-            #if not VendingFacade.machine_ids[-1]:
-            
-            if i != len(VendingFacade.machine_ids) - 1:
+            if i+1 < len(VendingFacade.machine_ids):
                 machine_string += VendingFacade.machine_ids[i] + ', '
-
-            if i != len(VendingFacade.machine_ids) - 2:
-                machine_string += VendingFacade.machine_ids[i] + ' or '
-            
-            else:
-                machine_string += VendingFacade.machine_ids[i]
-        
+            if i+1 == len(VendingFacade.machine_ids):
+                machine_string = machine_string[0:-2]
+                machine_string += f" or {VendingFacade.machine_ids[i]}"
+                                  
         machine_choice = pyip.inputChoice(VendingFacade.machine_ids, prompt=f"\nWhich vending machine do you wish to use? ({machine_string}): ")
         return machine_choice
 
@@ -275,18 +269,21 @@ if __name__ == '__main__':
 
     # ------------------------------ TEST CASE ----------------------------------- #
     
-    program_run = True
+    program_terminate = False
     maintenance_mode = False
     
-    while program_run == True:
+    while program_terminate != True:
 
         machine_choice = select_vending_machine()
         
-        vending_machine = vending_machine_pointer(machine_choice)
+        vending_machine_object = vending_machine_pointer(machine_choice)
+        
         vending = vending_process(machine_choice)
 
         if not vending:
             vending_machine.engineer_mode()
+
+
 
 
         if not vending:
@@ -330,5 +327,4 @@ if __name__ == '__main__':
                     maintenance_mode = False
                     print('\n-- Maintenance mode deactivated --')
 
-        if not continue_program():
-            program_run = False
+        program_terminate = terminate_program()
