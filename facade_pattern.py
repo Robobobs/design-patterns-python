@@ -99,6 +99,7 @@ class Dispenser:
         print(f"\nDispensing {product_choice}...")
         time.sleep(2)
 
+    # TODO: Add index feature that locates item within the machine prior to dispensing.
 
 class ProductInfo:
     '''Class representing product information for vendable products'''
@@ -106,6 +107,8 @@ class ProductInfo:
         self.name = name
         self.price = price
         self.stock = stock_qty
+
+        # TODO: Add self.location attribute. Upon initialisation, next available location assigned.
 
     def __str__(self):
         return f"Name: {self.name.title()};  Price: £{self.price};  Stock QTY: {self.stock}"
@@ -164,26 +167,49 @@ class Engineer:
 
 class VendingFacade:
     '''Facade class for vending machine sub processes'''    
-   
-    machine_ids = []
+    MAX_PRODUCT_CAPACITY = 12
+    MACHINE_IDS = []
 
-    def __init__(self, default_products=dict()):
-        self.id = None
+    MAINTENANCE_PROMPTS = [
+                        'Perform system check --->',
+                        'Display machine information --->',
+                        'Add new product --->',     
+                        'Delete existing product --->',        
+                        'Modify product information --->',  
+                        'Modify stock level --->',          
+                        'Exit maintenance mode --->',        
+                        ]
+
+    def __init__(self, type, default_products=dict()):
+        self.id = self.assign_machine_id()
+        self.type = type
         self.product_info_dict = dict()
         self.stock = Stock(self.product_info_dict)
-        self.dispenser = Dispenser()
         self.engineer = Engineer(self.product_info_dict)
-        
-        if not VendingFacade.machine_ids:
-            self.id = '1'
-            VendingFacade.machine_ids.append(self.id)
-        else:
-            new_id = VendingFacade.machine_ids[-1]
-            VendingFacade.machine_ids.append(str(int(new_id)+1))
+        self.dispenser = Dispenser()
 
         if default_products:
             for product_key, product_info in default_products.items():
-                self.engineer.add_product_info(product_info['name'], product_info['price'], product_info['stock_qty'])     
+                self.engineer.add_product_info(product_info['name'], product_info['price'], product_info['stock_qty'])
+
+    def __str__(self):
+        line_1 = "\n--- MACHINE INFORMATION ---\n"
+        line_2 = f"ID number: {self.id}\n"
+        line_3 = f"Vendor type: {self.type.title()}\n"
+        line_4 = f"Assigned slots: {len(self.product_info_dict.keys())}/{VendingFacade.MAX_PRODUCT_CAPACITY}"
+        
+        return line_1 + line_2 + line_3 + line_4
+
+    def assign_machine_id(self):    
+        if not VendingFacade.MACHINE_IDS:
+            initial_machine_id = '1'
+            VendingFacade.MACHINE_IDS.append(initial_machine_id)
+            return initial_machine_id
+        else:
+            previous_machine_id = VendingFacade.MACHINE_IDS[-1]
+            new_machine_id = str(int(previous_machine_id)+1)
+            VendingFacade.MACHINE_IDS.append(new_machine_id)
+            return new_machine_id
 
     def dispense_product(self, product_choice):
         '''Checks current stock level before dispensing product'''
@@ -199,23 +225,53 @@ class VendingFacade:
 
     def engineer_mode(self):
         '''Takes engineer requirements'''
+        print('\n-- Maintenance mode activated --\n')
+        maintenance_menu_choice = pyip.inputMenu(VendingFacade.MAINTENANCE_PROMPTS, numbered=True)
 
-        pass
+        if maintenance_menu_choice == VendingFacade.MAINTENANCE_PROMPTS[0]:
+            self.engineer.diagnostic_check()             
+
+        elif maintenance_menu_choice == VendingFacade.MAINTENANCE_PROMPTS[1]:
+            print(self.__str__())
+
+        elif maintenance_menu_choice == VendingFacade.MAINTENANCE_PROMPTS[2]:
+            print('\n-- Entering new product --')
+            name = pyip.inputStr('Assign product name: ')
+            price = pyip.inputFloat(prompt='Assign product price: ')
+            stock_qty = pyip.inputInt(min=0, max=10, prompt='Enter initial stock level: ')
+                    
+            self.engineer.add_product_info(name, price, stock_qty)
+            print(f"\n{name.title()} successfully added to vending machine!")
+
+        elif maintenance_menu_choice == VendingFacade.MAINTENANCE_PROMPTS[3]:
+            print('\n-- Product deletion --')
+            product_list = get_product_list(machine_choice)
+            name = pyip.inputMenu(product_list, numbered=True, prompt='Select item to be deleted:\n')
+            self.engineer.delete_product_info(name)
+
+        elif maintenance_menu_choice == VendingFacade.MAINTENANCE_PROMPTS[4]:
+            product_list = get_product_list(machine_choice)
+            self.engineer.modify_product_info(product_list)
+
+        elif maintenance_menu_choice == VendingFacade.MAINTENANCE_PROMPTS[5]:
+            product_list = get_product_list(machine_choice)
+            self.engineer.modify_product_stock(product_list)
+
+        elif maintenance_menu_choice == VendingFacade.MAINTENANCE_PROMPTS[6]:
+            print('\n-- Maintenance mode deactivated --')
+            
+        #if not repeat_maintenance_process():
+         
+        #    maintenance_mode = False
+        #    print('\n-- Maintenance mode deactivated --')
+
+
 
 if __name__ == '__main__':
 
-    vending_machine_1 = VendingFacade(DEFAULT_PRODUCTS_1)
-    vending_machine_2 = VendingFacade(DEFAULT_PRODUCTS_2)
+    vending_machine_1 = VendingFacade('food', DEFAULT_PRODUCTS_1)
+    vending_machine_2 = VendingFacade('drink', DEFAULT_PRODUCTS_2)
 
-    maintenance_prompts = [
-                        'Perform system check --->',
-                        'Add new product --->',     
-                        'Delete existing product --->',        
-                        'Modify product information --->',  
-                        'Modify stock level --->',          
-                        'Exit maintenance mode --->',        
-                        ]
-    
     def vending_machine_pointer(machine_id):
         '''Takes the machine_id and returns a pointer to the correct machine object'''
         if machine_id == '1':
@@ -238,28 +294,33 @@ if __name__ == '__main__':
     def vending_process(machine_id):
         vending_machine_object= vending_machine_pointer(machine_id)
         product_list = get_product_list(machine_id)
-        product_list.append('(Enter maintenance mode)')
-        product_choice = pyip.inputMenu(product_list, numbered=True, prompt="\nPlease select one of the following:\n")
-        
-        if product_choice == '(Enter maintenance mode)':
-            return False
-        else:
-            vending_machine_object.dispense_product(product_choice.lower())
-
+        product_list.append('(( Enter maintenance mode ))')
+        product_list.append('(( Exit vending process ))')
+                
+        while True:
+            product_choice = pyip.inputMenu(product_list, numbered=True, prompt="\nPlease select one of the following:\n")
+            
+            if product_choice == '(( Enter maintenance mode ))':
+                return 'maintenance'
+            if product_choice == '(( Exit vending process ))':
+                return False
+            else:
+                vending_machine_object.dispense_product(product_choice.lower())
+                
     def terminate_program():
         user_input = pyip.inputYesNo(prompt="\nReturn to the vending machines (yes/no): ")  
         return True if user_input == 'no' else False
 
     def select_vending_machine():
         machine_string = ''
-        for i in range(len(VendingFacade.machine_ids)):
-            if i+1 < len(VendingFacade.machine_ids):
-                machine_string += VendingFacade.machine_ids[i] + ', '
-            if i+1 == len(VendingFacade.machine_ids):
+        for i in range(len(VendingFacade.MACHINE_IDS)):
+            if i+1 < len(VendingFacade.MACHINE_IDS):
+                machine_string += VendingFacade.MACHINE_IDS[i] + ', '
+            if i+1 == len(VendingFacade.MACHINE_IDS):
                 machine_string = machine_string[0:-2]
-                machine_string += f" or {VendingFacade.machine_ids[i]}"
+                machine_string += f" or {VendingFacade.MACHINE_IDS[i]}"
                                   
-        machine_choice = pyip.inputChoice(VendingFacade.machine_ids, prompt=f"\nWhich vending machine do you wish to use? ({machine_string}): ")
+        machine_choice = pyip.inputChoice(VendingFacade.MACHINE_IDS, prompt=f"\nWhich vending machine do you wish to use? ({machine_string}): ")
         return machine_choice
 
     def repeat_maintenance_process():
@@ -274,57 +335,12 @@ if __name__ == '__main__':
     
     while program_terminate != True:
 
-        machine_choice = select_vending_machine()
-        
-        vending_machine_object = vending_machine_pointer(machine_choice)
-        
+        machine_choice = select_vending_machine()      
         vending = vending_process(machine_choice)
 
-        if not vending:
-            vending_machine.engineer_mode()
+        if vending == 'maintenance':
 
-
-
-
-        if not vending:
-            maintenance_mode = True
-            print('\n-- Maintenance mode activated --\n')
-            
-            while maintenance_mode == True:
-                maintenance_menu_choice = pyip.inputMenu(maintenance_prompts, numbered=True)
-
-                if maintenance_menu_choice == maintenance_prompts[0]:
-                    vending_machine.engineer.diagnostic_check()             
-
-                elif maintenance_menu_choice == maintenance_prompts[1]:
-                    print('\n-- Entering new product --')
-                    name = pyip.inputStr('Assign product name: ')
-                    price = pyip.inputFloat(prompt='Assign product price: ')
-                    stock_qty = pyip.inputInt(min=0, max=10, prompt='Enter initial stock level: ')
-                    
-                    vending_machine.engineer.add_product_info(name, price, stock_qty)
-                    print(f"\n{name.title()} successfully added to vending machine!")
-
-                elif maintenance_menu_choice == maintenance_prompts[2]:
-                    print('\n-- Product deletion --')
-                    product_list = get_product_list(machine_choice)
-                    name = pyip.inputMenu(product_list, numbered=True, prompt='Select item to be deleted:\n')
-                    vending_machine.engineer.delete_product_info(name)
-
-                elif maintenance_menu_choice == maintenance_prompts[3]:
-                    product_list = get_product_list(machine_choice)
-                    vending_machine.engineer.modify_product_info(product_list)
-
-                elif maintenance_menu_choice == maintenance_prompts[4]:
-                    product_list = get_product_list(machine_choice)
-                    vending_machine.engineer.modify_product_stock(product_list)
-
-                elif maintenance_menu_choice == maintenance_prompts[5]:
-                    print('\n-- Maintenance mode deactivated --')
-                    break
-
-                if not repeat_maintenance_process():
-                    maintenance_mode = False
-                    print('\n-- Maintenance mode deactivated --')
-
+            vending_machine_object = vending_machine_pointer(machine_choice)
+            vending_machine_object.engineer_mode()
+        
         program_terminate = terminate_program()
