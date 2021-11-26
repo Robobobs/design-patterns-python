@@ -3,61 +3,52 @@
 import time
 import pyinputplus as pyip
 
-DEFAULT_PRODUCTS_1 = {
-                    'peppermint tea': {
-                                        'name': 'peppermint tea',
-                                        'price': 3.70,
-                                        'stock_qty': 5
-                                        },
+DEFAULT_FOOD_PRODUCTS_1 = {
                     'bulgarian kozunak':{
                                         'name': 'bulgarian kozunak',
                                         'price': 1.90,
-                                        'stock_qty': 0
+                                        'stock_qty': 2
                                         },
                     'dairy milk': {
                                         'name': 'dairy milk',
                                         'price': 1.20,
-                                        'stock_qty': 8
+                                        'stock_qty': 4
                                         },
                     'freddo': {
                                         'name': 'freddo',
                                         'price': 0.10,
-                                        'stock_qty': 10
+                                        'stock_qty': 3
                                         },
-                    'coffee': {
-                                        'name': 'coffee',
-                                        'price': 3.20,
+                    'big bulgarian lukanka':{
+                                        'name': 'big bulgarian lukanka',
+                                        'price': 9.90,
+                                        'stock_qty': 1
+                                        },
+                    'fruit pastels': {
+                                        'name': 'fruit pastels',
+                                        'price': 2.20,
+                                        'stock_qty': 4
+                                        },
+                    'trebor mints': {
+                                        'name': 'trebor mints',
+                                        'price': 1.10,
+                                        'stock_qty': 6
+                                        },
+                    'snickers': {
+                                        'name': 'snickers',
+                                        'price': 2.10,
                                         'stock_qty': 2
                                         },
-                    'green tea': {
-                                        'name': 'green tea',
-                                        'price': 2.60,
-                                        'stock_qty': 9},
                     }
 
-DEFAULT_PRODUCTS_2 = {
+DEFAULT_DRINK_PRODUCTS_1 = {
                     'mint tea': {
                                     'name': 'mint tea',
                                     'price': 1.70,
-                                    'stock_qty': 8
-                                    },
-                    'big bulgarian lukanka':{
-                                    'name': 'big bulgarian lukanka',
-                                    'price': 9.90,
-                                    'stock_qty': 1
-                                    },
-                    'fruit pastels': {
-                                    'name': 'fruit pastels',
-                                    'price': 2.20,
-                                    'stock_qty': 4
-                                    },
-                    'trebor mints': {
-                                    'name': 'trebor mints',
-                                    'price': 1.10,
                                     'stock_qty': 3
                                     },
-                    'coffee': {
-                                    'name': 'latte',
+                    'americano': {
+                                    'name': 'americano',
                                     'price': 3.05,
                                     'stock_qty': 1
                                     },
@@ -66,6 +57,26 @@ DEFAULT_PRODUCTS_2 = {
                                     'price': 3.60,
                                     'stock_qty': 2
                                     },
+                    'peppermint tea': {
+                                    'name': 'peppermint tea',
+                                    'price': 3.70,
+                                    'stock_qty': 5
+                                    },
+                    'green tea': {
+                                    'name': 'green tea',
+                                    'price': 2.60,
+                                    'stock_qty': 3
+                                    },
+                    'latte': {
+                                    'name': 'latte',
+                                    'price': 3.55,
+                                    'stock_qty': 2
+                                    },
+                    'hot water': {
+                                    'name': 'hot water',
+                                    'price': 0.20,
+                                    'stock_qty': 5
+                                    },                
                     }
 
 class Stock:
@@ -147,7 +158,7 @@ class Engineer:
 
     def modify_product_stock(self, product_list):     
         MAX_STOCK = 10
-        product_choice = pyip.inputMenu(product_list, numbered=True)  
+        product_choice = pyip.inputMenu(product_list, numbered=True, prompt="\nPlease select one of the following:\n")  
 
         for product_key, product_info in self.product_info_dict.items():
             if product_key == product_choice.lower():
@@ -169,7 +180,6 @@ class VendingFacade:
     '''Facade class for vending machine sub processes'''    
     MAX_PRODUCT_CAPACITY = 12
     MACHINE_IDS = []
-
     MAINTENANCE_PROMPTS = [
                         'Perform system check --->',
                         'Display machine information --->',
@@ -223,43 +233,47 @@ class VendingFacade:
             print(f'\n{product_choice.title()} is out of stock!')
             return False
 
-    def engineer_mode(self):
+    def engineer_access(self):
         '''Takes engineer requirements'''
-        print('\n-- Maintenance mode activated --\n')
-        maintenance_menu_choice = pyip.inputMenu(VendingFacade.MAINTENANCE_PROMPTS, numbered=True)
+        print('\n-- Maintenance mode activated --')
+        
+        while True:
+            maintenance_menu_choice = pyip.inputMenu(VendingFacade.MAINTENANCE_PROMPTS, numbered=True, prompt="\nPlease select one of the following options:\n")
 
-        if maintenance_menu_choice == VendingFacade.MAINTENANCE_PROMPTS[0]:
-            self.engineer.diagnostic_check()             
+            if maintenance_menu_choice == VendingFacade.MAINTENANCE_PROMPTS[0]:
+                self.engineer.diagnostic_check()             
 
-        elif maintenance_menu_choice == VendingFacade.MAINTENANCE_PROMPTS[1]:
-            print(self.__str__())
+            elif maintenance_menu_choice == VendingFacade.MAINTENANCE_PROMPTS[1]:
+                print(self.__str__())
 
-        elif maintenance_menu_choice == VendingFacade.MAINTENANCE_PROMPTS[2]:
-            print('\n-- Entering new product --')
-            name = pyip.inputStr('Assign product name: ')
-            price = pyip.inputFloat(prompt='Assign product price: ')
-            stock_qty = pyip.inputInt(min=0, max=10, prompt='Enter initial stock level: ')
-                    
-            self.engineer.add_product_info(name, price, stock_qty)
-            print(f"\n{name.title()} successfully added to vending machine!")
+            elif maintenance_menu_choice == VendingFacade.MAINTENANCE_PROMPTS[2]:
+                print('\n-- Entering new product --')
+                name = pyip.inputStr('Assign product name: ')
+                price = pyip.inputFloat(prompt='Assign product price: ')
+                stock_qty = pyip.inputInt(min=0, max=10, prompt='Enter initial stock level: ')
+                        
+                self.engineer.add_product_info(name, price, stock_qty)
+                print(f"\n{name.title()} successfully added to vending machine!")
 
-        elif maintenance_menu_choice == VendingFacade.MAINTENANCE_PROMPTS[3]:
-            print('\n-- Product deletion --')
-            product_list = get_product_list(machine_choice)
-            name = pyip.inputMenu(product_list, numbered=True, prompt='Select item to be deleted:\n')
-            self.engineer.delete_product_info(name)
+            elif maintenance_menu_choice == VendingFacade.MAINTENANCE_PROMPTS[3]:
+                print('\n-- Product deletion --')
+                product_list = get_product_list(machine_choice)
+                name = pyip.inputMenu(product_list, numbered=True, prompt='Select item to be deleted:\n')
+                self.engineer.delete_product_info(name)
 
-        elif maintenance_menu_choice == VendingFacade.MAINTENANCE_PROMPTS[4]:
-            product_list = get_product_list(machine_choice)
-            self.engineer.modify_product_info(product_list)
+            elif maintenance_menu_choice == VendingFacade.MAINTENANCE_PROMPTS[4]:
+                product_list = get_product_list(machine_choice)
+                self.engineer.modify_product_info(product_list)
 
-        elif maintenance_menu_choice == VendingFacade.MAINTENANCE_PROMPTS[5]:
-            product_list = get_product_list(machine_choice)
-            self.engineer.modify_product_stock(product_list)
-
-        elif maintenance_menu_choice == VendingFacade.MAINTENANCE_PROMPTS[6]:
-            print('\n-- Maintenance mode deactivated --')
-            
+            elif maintenance_menu_choice == VendingFacade.MAINTENANCE_PROMPTS[5]:
+                product_list = get_product_list(machine_choice)
+                self.engineer.modify_product_stock(product_list)
+                
+            elif maintenance_menu_choice == VendingFacade.MAINTENANCE_PROMPTS[6]:
+                break
+        
+        print('\n-- Maintenance mode deactivated --')
+        
         #if not repeat_maintenance_process():
          
         #    maintenance_mode = False
@@ -269,8 +283,8 @@ class VendingFacade:
 
 if __name__ == '__main__':
 
-    vending_machine_1 = VendingFacade('food', DEFAULT_PRODUCTS_1)
-    vending_machine_2 = VendingFacade('drink', DEFAULT_PRODUCTS_2)
+    vending_machine_1 = VendingFacade('food', DEFAULT_FOOD_PRODUCTS_1)
+    vending_machine_2 = VendingFacade('drink', DEFAULT_DRINK_PRODUCTS_1)
 
     def vending_machine_pointer(machine_id):
         '''Takes the machine_id and returns a pointer to the correct machine object'''
@@ -307,6 +321,10 @@ if __name__ == '__main__':
             else:
                 vending_machine_object.dispense_product(product_choice.lower())
                 
+            user_input = pyip.inputYesNo(prompt="\nWould you like another product (yes/no): ")  
+            if user_input == 'no':
+                return False
+
     def terminate_program():
         user_input = pyip.inputYesNo(prompt="\nReturn to the vending machines (yes/no): ")  
         return True if user_input == 'no' else False
@@ -341,6 +359,6 @@ if __name__ == '__main__':
         if vending == 'maintenance':
 
             vending_machine_object = vending_machine_pointer(machine_choice)
-            vending_machine_object.engineer_mode()
+            vending_machine_object.engineer_access()
         
         program_terminate = terminate_program()
