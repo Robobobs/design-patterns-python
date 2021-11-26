@@ -103,7 +103,6 @@ class Stock:
             if product_key == product_choice:
                 product_info.stock -= remove_qty
 
-
 class Dispenser:
     '''Initiates physical vending (activates dispensing process)'''    
     def dispense(self, product_choice):
@@ -119,11 +118,10 @@ class ProductInfo:
         self.price = price
         self.stock = stock_qty
 
-        # TODO: Add self.location attribute. Upon initialisation, next available location assigned.
+        # TODO: Add self.index attribute. Upon initialisation, next available index assigned.
 
     def __str__(self):
         return f"Name: {self.name.title()};  Price: £{self.price};  Stock QTY: {self.stock}"
-
 
 class Engineer:
     '''Class representing the 'Engineer' for access to machine setting, maintenance and servicing'''
@@ -145,17 +143,43 @@ class Engineer:
         
     def modify_product_info(self, product_list):  
         product_choice = pyip.inputMenu(product_list, numbered=True, prompt="\nPlease select one of the following:\n")  
-        product_attributes = ['Name', 'Price', 'Stock']
+        product_attributes = [
+                            'Name',
+                            'Price',
+                            'Stock',
+                            '(( Display product info ))',
+                            '(( Exit modify process ))',
+                            ]
+        REPEAT_FLAG = True
 
-        prompt_1 = f"\nProduct selected: {product_choice.title()}\n"
-        prompt_2 = "Please select the attribute to modify: \n"
-
-        for product_key, product_info in self.product_info_dict.items():
-            if product_key == product_choice.lower():
-                attribute_choice = pyip.inputMenu(product_attributes, prompt=prompt_1 + prompt_2, numbered=True)  
-                new_attribute_value = pyip.inputStr(f"\nEnter new {attribute_choice}: ")
-                # product_info.attribute_choice = new_attribute_value # This isn't working. Wrong syntax.
-
+        while REPEAT_FLAG:
+            
+            # TODO: Attributes not updating properly. Likely culplit is the use of {product_choice} being stale after update
+            
+            prompt_1 = f"\nProduct selected: {product_choice.title()}\n"
+            prompt_2 = "Please select the attribute to modify: \n"
+            
+            for product_key, product_info in self.product_info_dict.items():
+                if product_key == product_choice.lower():
+                    attribute_choice = pyip.inputMenu(product_attributes, prompt=prompt_1 + prompt_2, numbered=True)  
+                    
+                    if attribute_choice not in product_attributes[-2:]: 
+                        new_attribute_value = pyip.inputStr(f"\nEnter new {attribute_choice}: ")
+                        
+                        if attribute_choice == 'Name':
+                            product_info.name = new_attribute_value.lower()
+                        elif attribute_choice == 'Price':
+                            product_info.price = float(new_attribute_value)
+                        elif attribute_choice == 'Stock':
+                            product_info.stock = int(new_attribute_value)
+                        
+                    elif attribute_choice == product_attributes[-2]:
+                        print('\n--- PRODUCT INFORMATION ---')
+                        print(product_info.__str__())
+                    
+                    elif attribute_choice == product_attributes[-1]:
+                        REPEAT_FLAG = False
+                    
     def modify_product_stock(self, product_list):     
         MAX_STOCK = 10
         product_choice = pyip.inputMenu(product_list, numbered=True, prompt="\nPlease select one of the following:\n")  
@@ -170,12 +194,7 @@ class Engineer:
 
                 print(f"\n{restock_number} {product_key} successfully added to the vending machine...")
                 print(f"New stock level: {product_info.stock}/{MAX_STOCK}")
-        
-        # Display existing stock level:   4/10 (10 max)
-        # If user asked to add more than maximum stock - current stock: prompt to restock the difference
-        # Display successful restock and confirm how many were added
-
-
+    
 class VendingFacade:
     '''Facade class for vending machine sub processes'''    
     MAX_PRODUCT_CAPACITY = 12
@@ -207,7 +226,6 @@ class VendingFacade:
         line_2 = f"ID number: {self.id}\n"
         line_3 = f"Vendor type: {self.type.title()}\n"
         line_4 = f"Assigned slots: {len(self.product_info_dict.keys())}/{VendingFacade.MAX_PRODUCT_CAPACITY}"
-        
         return line_1 + line_2 + line_3 + line_4
 
     def assign_machine_id(self):    
@@ -226,7 +244,7 @@ class VendingFacade:
 
         if self.stock.check_stock_level(product_choice) > 0:
             self.dispenser.dispense(product_choice)
-            self.stock.remove_stock(product_choice) # Is this correct still?
+            self.stock.remove_stock(product_choice)
             print(f'Dispensing complete. Enjoy your {product_choice}!')
             return True
         else:
@@ -273,12 +291,6 @@ class VendingFacade:
                 break
         
         print('\n-- Maintenance mode deactivated --')
-        
-        #if not repeat_maintenance_process():
-         
-        #    maintenance_mode = False
-        #    print('\n-- Maintenance mode deactivated --')
-
 
 
 if __name__ == '__main__':
