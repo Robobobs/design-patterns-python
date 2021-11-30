@@ -124,7 +124,7 @@ class ProductInfo:
         return f"Name: {self.name.title()};  Price: £{self.price};  Stock QTY: {self.stock}"
 
 class Engineer:
-    '''Class representing the 'Engineer' for access to machine setting, maintenance and servicing'''
+    '''Class representing the 'Service Engineer' for access to machine setting, maintenance and servicing'''
     def __init__(self, product_info_dict):
         self.product_info_dict = product_info_dict
     
@@ -137,51 +137,56 @@ class Engineer:
         '''Adds new product info to vending machine via ProductInfo'''
         self.product_info_dict[name] = ProductInfo(name, price, stock_qty)
 
-    def delete_product_info(self, name):
-        '''Adds new product info to vending machine via ProductInfo'''
-        #self.product_info_dict[name] = ProductInfo(name, price, stock_qty)
-        
+    def delete_product_info(self, product_list):
+        '''Deletes product info from vending machine'''
+        product_list.append('(( Exit deletion process ))') 
+        print('\n||--- Delete Product ---||')
+        selected_product = pyip.inputMenu(product_list, numbered=True, prompt='Select item to be deleted:\n')
+                
+        if selected_product in product_list[0:-1]:
+            deletion_check = pyip.inputYesNo(prompt=f"\nAre you sure you want to delete {selected_product.lower()} (yes/no): ")
+            if deletion_check == 'yes':
+                del self.product_info_dict[selected_product.lower()]
+                print(f"\n{selected_product.title()} deleted...")
+            else:
+                print(f"\n{selected_product.title()} not deleted...")
+                        
     def modify_product_info(self, product_list):  
-        product_choice = pyip.inputMenu(product_list, numbered=True, prompt="\nPlease select one of the following:\n")  
+        print('\n||--- Product Modification ---||')
+        product_choice = pyip.inputMenu(product_list, numbered=True, prompt="Please select one of the following:\n")  
         product_attributes = [
                             'Name',
                             'Price',
-                            'Stock',
-                            '(( Display product info ))',
-                            '(( Exit modify process ))',
                             ]
+        product_attributes.append('(( Display product info ))')
+        product_attributes.append('(( Exit modify process ))')
         REPEAT_FLAG = True
 
         while REPEAT_FLAG:
-            
-            # TODO: Attributes not updating properly. Likely culplit is the use of {product_choice} being stale after update
-            
-            prompt_1 = f"\nProduct selected: {product_choice.title()}\n"
-            prompt_2 = "Please select the attribute to modify: \n"
+            prompt_1 = "\nPlease select the attribute to modify: \n"
             
             for product_key, product_info in self.product_info_dict.items():
                 if product_key == product_choice.lower():
-                    attribute_choice = pyip.inputMenu(product_attributes, prompt=prompt_1 + prompt_2, numbered=True)  
+                    attribute_choice = pyip.inputMenu(product_attributes, prompt=prompt_1, numbered=True)  
                     
                     if attribute_choice not in product_attributes[-2:]: 
-                        new_attribute_value = pyip.inputStr(f"\nEnter new {attribute_choice}: ")
+                        new_attribute_value = pyip.inputStr(f"\nEnter new {attribute_choice.lower()}: ")
                         
                         if attribute_choice == 'Name':
                             product_info.name = new_attribute_value.lower()
                         elif attribute_choice == 'Price':
                             product_info.price = float(new_attribute_value)
-                        elif attribute_choice == 'Stock':
-                            product_info.stock = int(new_attribute_value)
                         
                     elif attribute_choice == product_attributes[-2]:
-                        print('\n--- PRODUCT INFORMATION ---')
+                        print('\n||--- Product Information ---||')
                         print(product_info.__str__())
                     
                     elif attribute_choice == product_attributes[-1]:
                         REPEAT_FLAG = False
-                    
+                   
     def modify_product_stock(self, product_list):     
         MAX_STOCK = 10
+        product_list.append('(( Exit stock modification process ))')
         product_choice = pyip.inputMenu(product_list, numbered=True, prompt="\nPlease select one of the following:\n")  
 
         for product_key, product_info in self.product_info_dict.items():
@@ -222,7 +227,7 @@ class VendingFacade:
                 self.engineer.add_product_info(product_info['name'], product_info['price'], product_info['stock_qty'])
 
     def __str__(self):
-        line_1 = "\n--- MACHINE INFORMATION ---\n"
+        line_1 = "\n||--- Machine Information ---||\n"
         line_2 = f"ID number: {self.id}\n"
         line_3 = f"Vendor type: {self.type.title()}\n"
         line_4 = f"Assigned slots: {len(self.product_info_dict.keys())}/{VendingFacade.MAX_PRODUCT_CAPACITY}"
@@ -241,7 +246,6 @@ class VendingFacade:
 
     def dispense_product(self, product_choice):
         '''Checks current stock level before dispensing product'''
-
         if self.stock.check_stock_level(product_choice) > 0:
             self.dispenser.dispense(product_choice)
             self.stock.remove_stock(product_choice)
@@ -253,7 +257,7 @@ class VendingFacade:
 
     def engineer_access(self):
         '''Takes engineer requirements'''
-        print('\n-- Maintenance mode activated --')
+        print('\n||--- MAINTENANCE MODE ACTIVATED ---||')
         
         while True:
             maintenance_menu_choice = pyip.inputMenu(VendingFacade.MAINTENANCE_PROMPTS, numbered=True, prompt="\nPlease select one of the following options:\n")
@@ -265,20 +269,18 @@ class VendingFacade:
                 print(self.__str__())
 
             elif maintenance_menu_choice == VendingFacade.MAINTENANCE_PROMPTS[2]:
-                print('\n-- Entering new product --')
+                print('\n||--- New Product ---||')
                 name = pyip.inputStr('Assign product name: ')
                 price = pyip.inputFloat(prompt='Assign product price: ')
                 stock_qty = pyip.inputInt(min=0, max=10, prompt='Enter initial stock level: ')
                         
                 self.engineer.add_product_info(name, price, stock_qty)
-                print(f"\n{name.title()} successfully added to vending machine!")
+                print(f"\n{name.title()} successfully added to the vending machine!")
 
             elif maintenance_menu_choice == VendingFacade.MAINTENANCE_PROMPTS[3]:
-                print('\n-- Product deletion --')
                 product_list = get_product_list(machine_choice)
-                name = pyip.inputMenu(product_list, numbered=True, prompt='Select item to be deleted:\n')
-                self.engineer.delete_product_info(name)
-
+                self.engineer.delete_product_info(product_list)
+                
             elif maintenance_menu_choice == VendingFacade.MAINTENANCE_PROMPTS[4]:
                 product_list = get_product_list(machine_choice)
                 self.engineer.modify_product_info(product_list)
@@ -290,7 +292,7 @@ class VendingFacade:
             elif maintenance_menu_choice == VendingFacade.MAINTENANCE_PROMPTS[6]:
                 break
         
-        print('\n-- Maintenance mode deactivated --')
+        print('\n||--- MAINTENANCE MODE DEACTIVATED ---||')
 
 
 if __name__ == '__main__':
@@ -319,11 +321,11 @@ if __name__ == '__main__':
 
     def vending_process(machine_id):
         vending_machine_object= vending_machine_pointer(machine_id)
-        product_list = get_product_list(machine_id)
-        product_list.append('(( Enter maintenance mode ))')
-        product_list.append('(( Exit vending process ))')
-                
+           
         while True:
+            product_list = get_product_list(machine_id)
+            product_list.append('(( Enter maintenance mode ))')
+            product_list.append('(( Exit vending process ))')
             product_choice = pyip.inputMenu(product_list, numbered=True, prompt="\nPlease select one of the following:\n")
             
             if product_choice == '(( Enter maintenance mode ))':
@@ -360,17 +362,16 @@ if __name__ == '__main__':
 
     # ------------------------------ TEST CASE ----------------------------------- #
     
-    program_terminate = False
-    maintenance_mode = False
+    PROGRAM_TERMINATE = False
+    MAINTENANCE_MODE = False
     
-    while program_terminate != True:
+    while PROGRAM_TERMINATE != True:
 
         machine_choice = select_vending_machine()      
         vending = vending_process(machine_choice)
 
         if vending == 'maintenance':
-
             vending_machine_object = vending_machine_pointer(machine_choice)
             vending_machine_object.engineer_access()
         
-        program_terminate = terminate_program()
+        PROGRAM_TERMINATE = terminate_program()
